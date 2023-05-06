@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <title>Artist WebUI</title>
+    <meta name="description" content="Woggers" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  </head>
+  <body>
+    <div class="root-container">
+        <p><!--Nothing to see here --></p>
+        {% block content %}{% endblock content %}
+    </div>
+  </body>
+</html>
