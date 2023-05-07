@@ -5,7 +5,9 @@ use actix_web::{web, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use log::info;
 
-use crate::{AppState, ArtistInventoryInformation, ArtistTurtleInformation, Packet, ArtistFurnaceInformation};
+use crate::{
+    AppState, ArtistFurnaceInformation, ArtistInventoryInformation, ArtistTurtleInformation, Packet,
+};
 
 pub struct WebsocketInstance {
     state: web::Data<Arc<RwLock<AppState>>>,
@@ -45,10 +47,22 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebsocketInstance
                         ctx.text("done")
                     }
                     Packet::FurnaceUpdate => {
-                        let furnace_information: ArtistFurnaceInformation = serde_json::from_value(deserialized.get("furnaces").unwrap().clone()).unwrap();
+                        let furnace_information: ArtistFurnaceInformation =
+                            serde_json::from_value(deserialized.get("furnaces").unwrap().clone())
+                                .unwrap();
 
-                        self.state.write().unwrap().artist.furnace_information.cold_furnaces = furnace_information.cold_furnaces;
-                        self.state.write().unwrap().artist.furnace_information.hot_furnaces = furnace_information.hot_furnaces;
+                        self.state
+                            .write()
+                            .unwrap()
+                            .artist
+                            .furnace_information
+                            .cold_furnaces = furnace_information.cold_furnaces;
+                        self.state
+                            .write()
+                            .unwrap()
+                            .artist
+                            .furnace_information
+                            .hot_furnaces = furnace_information.hot_furnaces;
 
                         info!("Updated furnace information")
                     }
@@ -83,7 +97,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebsocketInstance
                             .inventory_information
                             .slots = serde_json::to_value(inventory_information.slots).unwrap();
 
-                            info!("Updated inventory information")
+                        info!("Updated inventory information")
                     }
                 }
 
@@ -100,8 +114,5 @@ pub async fn websocket_index(
     stream: web::Payload,
     state: web::Data<Arc<RwLock<AppState>>>,
 ) -> Result<HttpResponse, actix_web::Error> {
-    let resp = ws::start(WebsocketInstance { state }, &req, stream);
-    //println!("{:?}", resp);
-
-    resp
+    ws::start(WebsocketInstance { state }, &req, stream)
 }
