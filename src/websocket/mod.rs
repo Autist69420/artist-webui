@@ -5,7 +5,7 @@ use actix_web::{web, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use log::info;
 
-use crate::{AppState, Packet, ArtistTurtleInformation, ArtistInventoryInformation};
+use crate::{AppState, ArtistInventoryInformation, ArtistTurtleInformation, Packet, ArtistFurnaceInformation};
 
 pub struct WebsocketInstance {
     state: web::Data<Arc<RwLock<AppState>>>,
@@ -37,23 +37,53 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebsocketInstance
                             turtle_information.name, turtle_information.id
                         );
 
-                        self.state.write().unwrap().artist.turtle_information.name = turtle_information.name;
-                        self.state.write().unwrap().artist.turtle_information.id = turtle_information.id;
+                        self.state.write().unwrap().artist.turtle_information.name =
+                            turtle_information.name;
+                        self.state.write().unwrap().artist.turtle_information.id =
+                            turtle_information.id;
 
                         ctx.text("done")
                     }
-                    Packet::FurnaceUpdate => {}
+                    Packet::FurnaceUpdate => {
+                        let furnace_information: ArtistFurnaceInformation = serde_json::from_value(deserialized.get("furnaces").unwrap().clone()).unwrap();
+
+                        self.state.write().unwrap().artist.furnace_information.cold_furnaces = furnace_information.cold_furnaces;
+                        self.state.write().unwrap().artist.furnace_information.hot_furnaces = furnace_information.hot_furnaces;
+
+                        info!("Updated furnace information")
+                    }
                     Packet::InventoryUpdate => {}
                     Packet::InventoryPeripheralsUpdate => {
-                        let inventory_information: ArtistInventoryInformation = serde_json::from_value(
-                            deserialized.get("inventory").unwrap().clone(),
-                        )
-                        .unwrap();
+                        let inventory_information: ArtistInventoryInformation =
+                            serde_json::from_value(deserialized.get("inventory").unwrap().clone())
+                                .unwrap();
 
-                        self.state.write().unwrap().artist.inventory_information.used_slots = inventory_information.used_slots;
-                        self.state.write().unwrap().artist.inventory_information.full_slots = inventory_information.full_slots;
-                        self.state.write().unwrap().artist.inventory_information.total_slots = inventory_information.total_slots;
-                        self.state.write().unwrap().artist.inventory_information.slots = serde_json::to_value(inventory_information.slots).unwrap();
+                        self.state
+                            .write()
+                            .unwrap()
+                            .artist
+                            .inventory_information
+                            .used_slots = inventory_information.used_slots;
+                        self.state
+                            .write()
+                            .unwrap()
+                            .artist
+                            .inventory_information
+                            .full_slots = inventory_information.full_slots;
+                        self.state
+                            .write()
+                            .unwrap()
+                            .artist
+                            .inventory_information
+                            .total_slots = inventory_information.total_slots;
+                        self.state
+                            .write()
+                            .unwrap()
+                            .artist
+                            .inventory_information
+                            .slots = serde_json::to_value(inventory_information.slots).unwrap();
+
+                            info!("Updated inventory information")
                     }
                 }
 

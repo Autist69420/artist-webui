@@ -24,11 +24,11 @@ pub enum Packet {
 
 #[derive(Debug, Clone)]
 pub struct Artist {
-   pub turtle_information: ArtistTurtleInformation,
+    pub turtle_information: ArtistTurtleInformation,
 
     pub furnace_information: ArtistFurnaceInformation,
 
-    pub inventory_information: ArtistInventoryInformation
+    pub inventory_information: ArtistInventoryInformation,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -40,7 +40,7 @@ pub struct ArtistTurtleInformation {
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ArtistFurnaceInformation {
     pub cold_furnaces: i32,
-    pub hot_furnaces: i32
+    pub hot_furnaces: i32,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -49,5 +49,5 @@ pub struct ArtistInventoryInformation {
     pub full_slots: u32,
     pub total_slots: u32,
 
-    pub slots: serde_json::Value
+    pub slots: serde_json::Value,
 }

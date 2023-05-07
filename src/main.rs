@@ -4,7 +4,10 @@ use actix_files::Files;
 use actix_web::{get, middleware::Logger, web, App, HttpResponse, HttpServer, Responder};
 use tera::Tera;
 
-use artist_webui::{api, websocket, AppState, Artist, ArtistInventoryInformation, ArtistTurtleInformation, ArtistFurnaceInformation};
+use artist_webui::{
+    api, websocket, AppState, Artist, ArtistFurnaceInformation, ArtistInventoryInformation,
+    ArtistTurtleInformation,
+};
 
 #[get("/")]
 async fn hello(state: web::Data<AppState>) -> impl Responder {
@@ -31,23 +34,23 @@ async fn main() -> std::io::Result<()> {
         full_slots: 0,
         total_slots: 0,
 
-        slots: Default::default()
+        slots: Default::default(),
     };
 
     let tutel_information = ArtistTurtleInformation {
         name: String::from("No Name"),
-        id: -1
+        id: -1,
     };
 
     let furnace_information = ArtistFurnaceInformation {
         hot_furnaces: 0,
-        cold_furnaces: 0
+        cold_furnaces: 0,
     };
 
     let artist = Artist {
         turtle_information: tutel_information,
         inventory_information,
-        furnace_information
+        furnace_information,
     };
 
     let state = Arc::new(RwLock::new(AppState { templates, artist }));
@@ -59,7 +62,11 @@ async fn main() -> std::io::Result<()> {
             .service(Files::new("/static", "./static"))
             .route("/ws", web::get().to(websocket::websocket_index))
             .service(hello)
-            .service(web::scope("/api").service(api::turtle_information).service(api::artist_information))
+            .service(
+                web::scope("/api")
+                    .service(api::turtle_information)
+                    .service(api::artist_information),
+            )
     })
     .bind(("127.0.0.1", 8080))?
     .run()

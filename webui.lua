@@ -2,6 +2,7 @@
 
 local websocket_url = "ws://127.0.0.1:8080/ws" -- change this
 local logger = require("artist.lib.log")
+local json = require("examples.json")
 
 local log = logger.get_logger("artist-webui")
 
@@ -18,6 +19,22 @@ local function key_table_len(tbl)
 	end
 
 	return len
+end
+
+local function get_sluts(items, inventories)
+	local all_sluts = {}
+
+	for i, inventory in pairs(inventories) do
+		local sluts = inventory.slots
+
+		for _, slut in pairs(sluts or {}) do
+			if slut.count > 0 then
+				local item = items.item_cache[slut.hash]
+				table.insert(all_sluts, item)
+			end
+		end
+	end
+	return all_sluts
 end
 
 return function(context)
@@ -57,11 +74,12 @@ return function(context)
 				inventory = {
 					used_slots = used_slots,
 					full_slots = full_slots,
-					total_slots = total_slots
+					total_slots = total_slots,
+
+					slots = get_sluts(items, items.inventories)
 				}
 			}
-
-			websocket.send(textutils.serialiseJSON(data))
+			websocket.send(json.encode(data))
 		end
 	end
 
@@ -76,8 +94,10 @@ return function(context)
 			local data = {
 				packet_type = "furnace_update",
 
-				hot_furnaces = hot_furnaces_len,
-				cold_furnaces = cold_furnaces_len,
+				furnaces = {
+					hot_furnaces = hot_furnaces_len,
+					cold_furnaces = cold_furnaces_len,
+				}
 			}
 
 			websocket.send(textutils.serialiseJSON(data))
@@ -96,11 +116,7 @@ return function(context)
 
 			if event == "websocket_message" then
 				local url, message = eventData[2], eventData[3]
-
-				if message == "done" then
-					log("Fully connected :D")
-					waka = false
-				end
+				--log(url, message)
 			elseif event == "websocket_close" then
 				log("Websocket closed :( %s", eventData[2])
 
@@ -122,6 +138,8 @@ return function(context)
 			}
 
 			websocket.send(textutils.serialiseJSON(data))
+			os.pullEvent("websocket_message")
+			waka = false
 		until waka == false
 	end)
 
