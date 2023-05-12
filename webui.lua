@@ -21,6 +21,16 @@ local function key_table_len(tbl)
 	return len
 end
 
+local function sluts_contain_item(sluts, item)
+	for _,v in pairs(sluts) do
+		if v.details.name == item.details.name then
+			return true
+		end
+	end
+
+	return false
+end
+
 local function get_sluts(items, inventories)
 	local all_sluts = {}
 
@@ -30,7 +40,9 @@ local function get_sluts(items, inventories)
 		for _, slut in pairs(sluts or {}) do
 			if slut.count > 0 then
 				local item = items.item_cache[slut.hash]
-				table.insert(all_sluts, item)
+				if not sluts_contain_item(all_sluts, item) then
+					table.insert(all_sluts, item)
+				end
 			end
 		end
 	end
@@ -122,7 +134,11 @@ return function(context)
 
 				websocket.close()
 			elseif event == "websocket_success" then
-				print("Connected to " .. websocket_url)
+				log("Connected to " .. websocket_url)
+			elseif event == "websocket_failure" then
+				log("Could not connect to " .. websocket_url)
+
+				break
 			end
 		end
 	end)
