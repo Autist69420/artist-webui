@@ -1,4 +1,3 @@
-use log::info;
 use serde::Serialize;
 use std::sync::{Arc, RwLock};
 
@@ -19,12 +18,7 @@ struct ArtistInformation {
 pub async fn turtle_information(state: web::Data<Arc<RwLock<AppState>>>) -> impl Responder {
     let artist = &state.read().unwrap().artist;
 
-    info!(
-        "{} {}",
-        artist.turtle_information.name, artist.turtle_information.id
-    );
-
-    "waka waka"
+    HttpResponse::Ok().json(&artist.turtle_information)
 }
 
 #[get("/artist")]
@@ -55,4 +49,13 @@ pub async fn artist_information(state: web::Data<Arc<RwLock<AppState>>>) -> impl
     };
 
     HttpResponse::Ok().json(information)
+}
+
+#[get("/artist/inventory")]
+pub async fn artist_inventory_information(
+    state: web::Data<Arc<RwLock<AppState>>>,
+) -> impl Responder {
+    let artist = &state.read().unwrap().artist;
+
+    HttpResponse::Ok().json(&artist.inventory_information)
 }

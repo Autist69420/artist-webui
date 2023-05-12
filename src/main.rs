@@ -65,7 +65,8 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("/api")
                     .service(api::turtle_information)
-                    .service(api::artist_information),
+                    .service(api::artist_information)
+                    .service(api::artist_inventory_information),
             )
     })
     .bind(("127.0.0.1", 8080))?
