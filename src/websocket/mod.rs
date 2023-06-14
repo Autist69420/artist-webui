@@ -81,6 +81,7 @@ pub async fn websocket(stream: WebSocket, state: Arc<Mutex<AppState>>) {
 
                         state.lock().unwrap().artist.inventory.full_slots = data.full_slots;
                         state.lock().unwrap().artist.inventory.used_slots = data.used_slots;
+                        state.lock().unwrap().artist.inventory.total_slots = data.total_slots;
                         state.lock().unwrap().artist.inventory.slots = data.slots;
 
                         let response = JsonResponse {

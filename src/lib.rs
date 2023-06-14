@@ -27,6 +27,7 @@ pub struct ArtistFurnaceInformation {
 pub struct ArtistInventoryInformation {
     pub used_slots: i32,
     pub full_slots: i32,
+    pub total_slots: i32,
 
     pub slots: Vec<Item>
 }
@@ -57,6 +58,6 @@ impl Default for ArtistFurnaceInformation {
 
 impl Default for ArtistInventoryInformation {
     fn default() -> Self {
-        Self { used_slots: Default::default(), full_slots: Default::default(), slots: Default::default() }
+        Self { used_slots: Default::default(), full_slots: Default::default(), total_slots: Default::default(), slots: Default::default() }
     }
 }
