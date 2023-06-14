@@ -1,5 +1,3 @@
---local widget = require("artist.lib.widget")
-
 local websocket_url = "ws://127.0.0.1:8080/ws" -- change this
 local logger = require("artist.lib.log")
 local json = require("examples.json")
@@ -49,6 +47,16 @@ local function get_sluts(items, inventories)
 	return all_sluts
 end
 
+local function get_furnaces(furnaces)
+	local furni = {}
+	for i, furnace in pairs(furnaces) do
+		local name = furnace.name
+		local cooking = furnace.cooking
+		table.insert(furni, {cooking = cooking, name = name})
+	end
+	return furni
+end
+
 return function(context)
 	local items = context:require("artist.core.items")
 	local furnaces = context:require("artist.items.furnaces")
@@ -81,9 +89,9 @@ return function(context)
 			end
 
 			local data = {
-				packet_type = "inventory_peripherals_update",
+				packet = "artist_inventory_update",
 
-				inventory = {
+				data = {
 					used_slots = used_slots,
 					full_slots = full_slots,
 					total_slots = total_slots,
@@ -91,28 +99,31 @@ return function(context)
 					slots = get_sluts(items, items.inventories)
 				}
 			}
+			--log(json.encode(data))
 			websocket.send(json.encode(data))
 		end
 	end
 
-	local function send_item_change() end
+	local function send_item_change(cock)
+		log(textutils.serialise(cock[1]))
+	end
 
 	local function send_furnace_change()
 		-- just a lil protection
 		if waka == false then
-			local hot_furnaces_len, cold_furnaces_len =
-				key_table_len(furnaces.hot_furnaces), key_table_len(furnaces.cold_furnaces)
+			local hot_furnaces = get_furnaces(furnaces.hot_furnaces)
+			local cold_furnaces = get_furnaces(furnaces.cold_furnaces)
 
 			local data = {
-				packet_type = "furnace_update",
+				packet = "artist_furnace_update",
 
-				furnaces = {
-					hot_furnaces = hot_furnaces_len,
-					cold_furnaces = cold_furnaces_len,
+				data = {
+					hot_furnaces = hot_furnaces,
+					cold_furnaces = cold_furnaces,
 				}
 			}
 
-			websocket.send(textutils.serialiseJSON(data))
+			websocket.send(json.encode(data))
 		end
 	end
 
@@ -148,12 +159,11 @@ return function(context)
 		-- Do sending shit and stuff
 		repeat
 			local data = {
-				packet_type = "turtle_connect",
-
-				turtle_information = turtle_information,
+				packet = "turt_connect",
+				data = turtle_information,
 			}
 
-			websocket.send(textutils.serialiseJSON(data))
+			websocket.send(json.encode(data))
 			os.pullEvent("websocket_message")
 			waka = false
 		until waka == false

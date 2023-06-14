@@ -1,118 +1,99 @@
-use std::sync::{Arc, RwLock};
-
-use actix::{Actor, StreamHandler};
-use actix_web::{web, HttpRequest, HttpResponse};
-use actix_web_actors::ws;
-use log::info;
+use axum::{
+    extract::{
+        ws::{Message, WebSocket},
+        State, WebSocketUpgrade,
+    },
+    response::IntoResponse,
+};
+use futures::{stream::StreamExt, SinkExt};
+use std::sync::{Arc, Mutex};
 
 use crate::{
-    AppState, ArtistFurnaceInformation, ArtistInventoryInformation, ArtistTurtleInformation, Packet,
+    json::{JsonResponse, PacketType},
+    AppState,
 };
 
-pub struct WebsocketInstance {
-    state: web::Data<Arc<RwLock<AppState>>>,
+use crate::json::{JsonData, PacketTypeStr};
+
+pub async fn websocket_handler(
+    ws: WebSocketUpgrade,
+    State(state): State<Arc<Mutex<AppState>>>,
+) -> impl IntoResponse {
+    ws.on_upgrade(|socket| websocket(socket, state))
 }
 
-impl Actor for WebsocketInstance {
-    type Context = ws::WebsocketContext<Self>;
-}
+pub async fn websocket(stream: WebSocket, state: Arc<Mutex<AppState>>) {
+    // By splitting, we can send and receive at the same time.
+    let (mut sender, mut receiver) = stream.split();
 
-impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebsocketInstance {
-    fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
-        match msg {
-            Ok(ws::Message::Ping(msg)) => ctx.pong(&msg),
-            Ok(ws::Message::Text(text)) => {
-                let deserialized: serde_json::Value = serde_json::from_str(&text).unwrap();
-                let packet_type: Packet =
-                    serde_json::from_value(deserialized.get("packet_type").unwrap().clone())
-                        .unwrap();
+    while let Some(Ok(message)) = receiver.next().await {
+        if let Message::Text(message) = message {
+            let json_data: JsonData = serde_json::from_str(&message).unwrap();
 
-                match packet_type {
-                    Packet::TurtleConnect => {
-                        let turtle_information: ArtistTurtleInformation = serde_json::from_value(
-                            deserialized.get("turtle_information").unwrap().clone(),
-                        )
-                        .unwrap();
+            match json_data.packet {
+                PacketTypeStr::TurtleConnnect => {
+                    let packet_type = PacketType::get_type(json_data.packet, json_data.data);
 
-                        info!(
-                            "Turtle `{}` with id `{}` has connected",
-                            turtle_information.name, turtle_information.id
-                        );
+                    if let PacketType::TurtleConnect(data) = packet_type {
+                        tracing::info!("{} {}", data.name, data.id);
 
-                        self.state.write().unwrap().artist.turtle_information.name =
-                            turtle_information.name;
-                        self.state.write().unwrap().artist.turtle_information.id =
-                            turtle_information.id;
+                        // TODO: Check if the id is already set or not.
+                        state.lock().unwrap().turtle.name = data.name;
+                        state.lock().unwrap().turtle.id = data.id;
 
-                        ctx.text("done")
-                    }
-                    Packet::FurnaceUpdate => {
-                        let furnace_information: ArtistFurnaceInformation =
-                            serde_json::from_value(deserialized.get("furnaces").unwrap().clone())
-                                .unwrap();
+                        let response = JsonResponse {
+                            success: true,
+                            message: String::from("successfully connected!"),
+                        };
 
-                        self.state
-                            .write()
-                            .unwrap()
-                            .artist
-                            .furnace_information
-                            .cold_furnaces = furnace_information.cold_furnaces;
-                        self.state
-                            .write()
-                            .unwrap()
-                            .artist
-                            .furnace_information
-                            .hot_furnaces = furnace_information.hot_furnaces;
-
-                        info!("Updated furnace information")
-                    }
-                    Packet::InventoryUpdate => {}
-                    Packet::InventoryPeripheralsUpdate => {
-                        let inventory_information: ArtistInventoryInformation =
-                            serde_json::from_value(deserialized.get("inventory").unwrap().clone())
-                                .unwrap();
-
-                        self.state
-                            .write()
-                            .unwrap()
-                            .artist
-                            .inventory_information
-                            .used_slots = inventory_information.used_slots;
-                        self.state
-                            .write()
-                            .unwrap()
-                            .artist
-                            .inventory_information
-                            .full_slots = inventory_information.full_slots;
-                        self.state
-                            .write()
-                            .unwrap()
-                            .artist
-                            .inventory_information
-                            .total_slots = inventory_information.total_slots;
-                        self.state
-                            .write()
-                            .unwrap()
-                            .artist
-                            .inventory_information
-                            .slots = serde_json::to_value(inventory_information.slots).unwrap();
-
-                        info!("Updated inventory information")
+                        let _ = sender
+                            .send(Message::Text(serde_json::to_string(&response).unwrap()))
+                            .await;
                     }
                 }
+                PacketTypeStr::ArtistFurnaceUpdate => {
+                    let packet_type = PacketType::get_type(json_data.packet, json_data.data);
 
-                //ctx.text(text)
+                    if let PacketType::ArtistFurnaceUpdate(data) = packet_type {
+                        tracing::info!(
+                            "hot = {:?}; cold = {:?}",
+                            data.hot_furnaces,
+                            data.cold_furnaces
+                        );
+
+                        state.lock().unwrap().artist.furnaces.cold_furnaces = data.cold_furnaces;
+                        state.lock().unwrap().artist.furnaces.hot_furnaces = data.hot_furnaces;
+
+                        let response = JsonResponse {
+                            success: true,
+                            message: String::from("Set new values for furnaces"),
+                        };
+
+                        let _ = sender
+                            .send(Message::Text(serde_json::to_string(&response).unwrap()))
+                            .await;
+                    }
+                }
+                PacketTypeStr::ArtistInventoryUpdate => {
+                    let packet_type = PacketType::get_type(json_data.packet, json_data.data);
+
+                    if let PacketType::ArtistInventoryUpdate(data) = packet_type {
+
+                        state.lock().unwrap().artist.inventory.full_slots = data.full_slots;
+                        state.lock().unwrap().artist.inventory.used_slots = data.used_slots;
+                        state.lock().unwrap().artist.inventory.slots = data.slots;
+
+                        let response = JsonResponse {
+                            success: true,
+                            message: String::from("Set new values for inventory"),
+                        };
+
+                        let _ = sender
+                            .send(Message::Text(serde_json::to_string(&response).unwrap()))
+                            .await;
+                    }
+                }
             }
-            Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
-            _ => (),
         }
     }
-}
-
-pub async fn websocket_index(
-    req: HttpRequest,
-    stream: web::Payload,
-    state: web::Data<Arc<RwLock<AppState>>>,
-) -> Result<HttpResponse, actix_web::Error> {
-    ws::start(WebsocketInstance { state }, &req, stream)
 }

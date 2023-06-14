@@ -1,75 +1,45 @@
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
+use std::sync::Mutex;
 
-use actix_files::Files;
-use actix_web::{get, middleware::Logger, web, App, HttpResponse, HttpServer, Responder};
-use tera::Tera;
 
-use artist_webui::{
-    api, websocket, AppState, Artist, ArtistFurnaceInformation, ArtistInventoryInformation,
-    ArtistTurtleInformation,
-};
+use axum::{response::Html, routing::get, Router};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-#[get("/")]
-async fn hello(state: web::Data<AppState>) -> impl Responder {
-    let template = &state.templates;
+use artist_webui_axum::websocket;
+use artist_webui_axum::AppState;
 
-    let ctx = tera::Context::new();
+use artist_webui_axum::{TurtleInformation, ArtistInformation};
 
-    let body = template
-        .render("index.html.tera", &ctx)
-        .map_err(|_| actix_web::error::ErrorInternalServerError("Template error"))
+#[tokio::main]
+async fn main() {
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "artist_webui=trace".into()),
+        )
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+
+    let turtle_information = TurtleInformation::default();
+    let artist_information = ArtistInformation::default();
+
+    let app_state = Arc::new(Mutex::new(AppState {
+        turtle: turtle_information,
+        artist: artist_information,
+    }));
+
+    let app = Router::new()
+        .route("/", get(index))
+        .route("/ws", get(websocket::websocket_handler))
+        .with_state(app_state);
+
+    axum::Server::bind(&"0.0.0.0:8080".parse().unwrap())
+        .serve(app.into_make_service())
+        .await
         .unwrap();
-
-    HttpResponse::Ok().content_type("text/html").body(body)
 }
 
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
-
-    let templates = Tera::new("./templates/**/*").unwrap();
-
-    let inventory_information = ArtistInventoryInformation {
-        used_slots: 0,
-        full_slots: 0,
-        total_slots: 0,
-
-        slots: Default::default(),
-    };
-
-    let tutel_information = ArtistTurtleInformation {
-        name: String::from("No Name"),
-        id: -1,
-    };
-
-    let furnace_information = ArtistFurnaceInformation {
-        hot_furnaces: 0,
-        cold_furnaces: 0,
-    };
-
-    let artist = Artist {
-        turtle_information: tutel_information,
-        inventory_information,
-        furnace_information,
-    };
-
-    let state = Arc::new(RwLock::new(AppState { templates, artist }));
-
-    HttpServer::new(move || {
-        App::new()
-            .wrap(Logger::default())
-            .app_data(web::Data::new(state.clone()))
-            .service(Files::new("/static", "./static"))
-            .route("/ws", web::get().to(websocket::websocket_index))
-            .service(hello)
-            .service(
-                web::scope("/api")
-                    .service(api::turtle_information)
-                    .service(api::artist_information)
-                    .service(api::artist_inventory_information),
-            )
-    })
-    .bind(("127.0.0.1", 8080))?
-    .run()
-    .await
+// for now
+async fn index() -> Html<&'static str> {
+    Html("no data for u")
 }

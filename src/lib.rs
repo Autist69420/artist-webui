@@ -1,53 +1,62 @@
-use serde::{Deserialize, Serialize};
 
-pub mod api;
+pub mod json;
 pub mod websocket;
 
-#[derive(Debug, Clone)]
+use json::{Furnace, Item};
+
 pub struct AppState {
-    pub templates: tera::Tera,
-
-    pub artist: Artist,
+    pub turtle: TurtleInformation,
+    pub artist: ArtistInformation,
 }
 
-#[derive(Deserialize)]
-pub enum Packet {
-    #[serde(rename = "turtle_connect")]
-    TurtleConnect,
-    #[serde(rename = "furnace_update")]
-    FurnaceUpdate,
-    #[serde(rename = "inventory_update")]
-    InventoryUpdate,
-    #[serde(rename = "inventory_peripherals_update")]
-    InventoryPeripheralsUpdate,
+pub struct ArtistInformation {
+    pub furnaces: ArtistFurnaceInformation,
+    pub inventory: ArtistInventoryInformation,
 }
 
-#[derive(Debug, Clone)]
-pub struct Artist {
-    pub turtle_information: ArtistTurtleInformation,
-
-    pub furnace_information: ArtistFurnaceInformation,
-
-    pub inventory_information: ArtistInventoryInformation,
-}
-
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct ArtistTurtleInformation {
+pub struct TurtleInformation {
     pub name: String,
     pub id: i32,
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ArtistFurnaceInformation {
-    pub cold_furnaces: i32,
-    pub hot_furnaces: i32,
+    pub hot_furnaces: Vec<Furnace>,
+    pub cold_furnaces: Vec<Furnace>,
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ArtistInventoryInformation {
-    pub used_slots: u32,
-    pub full_slots: u32,
-    pub total_slots: u32,
+    pub used_slots: i32,
+    pub full_slots: i32,
 
-    pub slots: serde_json::Value,
+    pub slots: Vec<Item>
+}
+
+impl Default for ArtistInformation {
+    fn default() -> Self {
+        Self { furnaces: Default::default(), inventory: Default::default() }
+    }
+}
+
+impl Default for TurtleInformation {
+    fn default() -> Self {
+        Self {
+            name: String::from("No name"),
+            id: -1,
+        }
+    }
+}
+
+impl Default for ArtistFurnaceInformation {
+    fn default() -> Self {
+        Self {
+            hot_furnaces: Vec::new(),
+            cold_furnaces: Vec::new(),
+        }
+    }
+}
+
+impl Default for ArtistInventoryInformation {
+    fn default() -> Self {
+        Self { used_slots: Default::default(), full_slots: Default::default(), slots: Default::default() }
+    }
 }
