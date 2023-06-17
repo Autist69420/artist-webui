@@ -13,7 +13,7 @@ pub struct AppState {
 
 #[derive(Clone)]
 pub struct ArtistInformation {
-    pub furnaces: ArtistFurnaceInformation,
+    pub furnaces: Vec<Furnace>,
     pub inventory: ArtistInventoryInformation,
 }
 

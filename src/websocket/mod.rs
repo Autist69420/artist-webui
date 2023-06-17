@@ -59,13 +59,11 @@ pub async fn websocket(stream: WebSocket, state: Arc<Mutex<AppState>>) {
 
                     if let PacketType::ArtistFurnaceUpdate(data) = packet_type {
                         tracing::info!(
-                            "hot = {:?}; cold = {:?}",
-                            data.hot_furnaces,
-                            data.cold_furnaces
+                            "furnaces = {:?};",
+                            data.furnaces
                         );
 
-                        state.lock().unwrap().artist.furnaces.cold_furnaces = data.cold_furnaces;
-                        state.lock().unwrap().artist.furnaces.hot_furnaces = data.hot_furnaces;
+                        state.lock().unwrap().artist.furnaces = data.furnaces;
 
                         let response = JsonResponse {
                             success: true,

@@ -49,11 +49,19 @@ end
 
 local function get_furnaces(furnaces)
 	local furni = {}
-	for i, furnace in pairs(furnaces) do
+
+	for i, furnace in pairs(furnaces.hot_furnaces) do
 		local name = furnace.name
 		local cooking = furnace.cooking
 		table.insert(furni, {cooking = cooking, name = name})
 	end
+
+	for i, furnace in pairs(furnaces.cold_furnaces) do
+		local name = furnace.name
+		local cooking = furnace.cooking
+		table.insert(furni, {cooking = cooking, name = name})
+	end
+
 	return furni
 end
 
@@ -111,16 +119,12 @@ return function(context)
 	local function send_furnace_change()
 		-- just a lil protection
 		if waka == false then
-			local hot_furnaces = get_furnaces(furnaces.hot_furnaces)
-			local cold_furnaces = get_furnaces(furnaces.cold_furnaces)
+			local furnaces = get_furnaces(furnaces)
 
 			local data = {
 				packet = "artist_furnace_update",
 
-				data = {
-					hot_furnaces = hot_furnaces,
-					cold_furnaces = cold_furnaces,
-				}
+				data = {furnaces = furnaces}
 			}
 
 			websocket.send(json.encode(data))

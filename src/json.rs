@@ -37,8 +37,7 @@ pub struct TurtleConnectionData {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ArtistFurnaceUpdateData {
-    pub cold_furnaces: Vec<Furnace>,
-    pub hot_furnaces: Vec<Furnace>,
+    pub furnaces: Vec<Furnace>
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -95,14 +94,11 @@ impl PacketType {
                 PacketType::TurtleConnect(connection_data)
             }
             PacketTypeStr::ArtistFurnaceUpdate => {
-                let hot_furnaces =
-                    to_type::<Vec<Furnace>>(json_value.get("hot_furnaces").unwrap()).unwrap();
-                let cold_furnaces =
-                    to_type::<Vec<Furnace>>(json_value.get("cold_furnaces").unwrap()).unwrap();
+                let furnaces =
+                    to_type::<Vec<Furnace>>(json_value.get("furnaces").unwrap()).unwrap();
 
-                let furnace_data = ArtistFurnaceUpdateData {
-                    cold_furnaces,
-                    hot_furnaces,
+                let furnace_data = ArtistFurnaceUpdateData{
+                    furnaces
                 };
 
                 PacketType::ArtistFurnaceUpdate(furnace_data)
