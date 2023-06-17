@@ -1,14 +1,15 @@
 use std::sync::Arc;
 use std::sync::Mutex;
 
-
 use axum::{response::Html, routing::get, Router};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use artist_webui_axum::websocket;
 use artist_webui_axum::AppState;
 
-use artist_webui_axum::{TurtleInformation, ArtistInformation};
+use artist_webui_axum::{ArtistInformation, TurtleInformation};
+
+use artist_webui_axum::api;
 
 #[tokio::main]
 async fn main() {
@@ -31,6 +32,18 @@ async fn main() {
     let app = Router::new()
         .route("/", get(index))
         .route("/ws", get(websocket::websocket_handler))
+        .nest(
+            "/api",
+            Router::new()
+                .route(
+                    "/artist/inventory",
+                    get(api::artist::artist_inventory_slots),
+                )
+                .route(
+                    "/artist/furnaces",
+                    get(api::artist::artist_furnace_information),
+                ),
+        )
         .with_state(app_state);
 
     axum::Server::bind(&"0.0.0.0:8080".parse().unwrap())
