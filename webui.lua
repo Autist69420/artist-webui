@@ -9,18 +9,8 @@ local turtle_information = {
 	id = os.getComputerID(),
 }
 
-local function key_table_len(tbl)
-	local len = 0
-
-	for _, _ in pairs(tbl) do
-		len = len + 1
-	end
-
-	return len
-end
-
 local function sluts_contain_item(sluts, item)
-	for _,v in pairs(sluts) do
+	for _, v in pairs(sluts) do
 		if v.details.name == item.details.name then
 			return true
 		end
@@ -32,7 +22,7 @@ end
 local function get_sluts(items, inventories)
 	local all_sluts = {}
 
-	for i, inventory in pairs(inventories) do
+	for _, inventory in pairs(inventories) do
 		local sluts = inventory.slots
 
 		for _, slut in pairs(sluts or {}) do
@@ -50,16 +40,16 @@ end
 local function get_furnaces(furnaces)
 	local furni = {}
 
-	for i, furnace in pairs(furnaces.hot_furnaces) do
+	for _, furnace in pairs(furnaces.hot_furnaces) do
 		local name = furnace.name
 		local cooking = furnace.cooking
-		table.insert(furni, {cooking = cooking, name = name})
+		table.insert(furni, { cooking = cooking, name = name })
 	end
 
-	for i, furnace in pairs(furnaces.cold_furnaces) do
+	for _, furnace in pairs(furnaces.cold_furnaces) do
 		local name = furnace.name
 		local cooking = furnace.cooking
-		table.insert(furni, {cooking = cooking, name = name})
+		table.insert(furni, { cooking = cooking, name = name })
 	end
 
 	return furni
@@ -104,8 +94,8 @@ return function(context)
 					full_slots = full_slots,
 					total_slots = total_slots,
 
-					slots = get_sluts(items, items.inventories)
-				}
+					slots = get_sluts(items, items.inventories),
+				},
 			}
 			--log(json.encode(data))
 			websocket.send(json.encode(data))
@@ -119,14 +109,13 @@ return function(context)
 	local function send_furnace_change()
 		-- just a lil protection
 		if waka == false then
-			local furnaces = get_furnaces(furnaces)
+			local gotten_furni = get_furnaces(furnaces)
 
 			local data = {
 				packet = "artist_furnace_update",
 
-				data = {furnaces = furnaces}
+				data = { furnaces = gotten_furni },
 			}
-
 			websocket.send(json.encode(data))
 		end
 	end
@@ -142,8 +131,9 @@ return function(context)
 			local event = eventData[1]
 
 			if event == "websocket_message" then
-				local url, message = eventData[2], eventData[3]
-				--log(url, message)
+				-- TODO: I should probably make this actually do something
+				-- local url, message = eventData[2], eventData[3]
+				-- log(url, message)
 			elseif event == "websocket_close" then
 				log("Websocket closed :( %s", eventData[2])
 
