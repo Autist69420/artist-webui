@@ -9,6 +9,14 @@ use serde::Serialize;
 pub struct AppState {
     pub turtle: TurtleInformation,
     pub artist: ArtistInformation,
+
+    pub ready: ReadyState,
+}
+
+#[derive(Clone)]
+pub enum ReadyState {
+    Ready,
+    NotConnected,
 }
 
 #[derive(Clone)]

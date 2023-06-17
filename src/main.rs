@@ -1,7 +1,10 @@
 use std::sync::Arc;
 use std::sync::Mutex;
 
+use axum::http::Method;
 use axum::{response::Html, routing::get, Router};
+use tower_http::cors::Any;
+use tower_http::cors::CorsLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use artist_webui_axum::websocket;
@@ -27,7 +30,15 @@ async fn main() {
     let app_state = Arc::new(Mutex::new(AppState {
         turtle: turtle_information,
         artist: artist_information,
+        ready: artist_webui_axum::ReadyState::NotConnected,
     }));
+
+
+    let cors = CorsLayer::new()
+        // allow `GET` and `POST` when accessing the resource
+        .allow_methods([Method::GET, Method::POST])
+        // allow requests from any origin
+        .allow_origin(Any);
 
     let app = Router::new()
         .route("/", get(index))
@@ -42,9 +53,11 @@ async fn main() {
                 .route(
                     "/artist/furnaces",
                     get(api::artist::artist_furnace_information),
-                ),
+                )
+                .route("/status", get(api::status)),
         )
-        .with_state(app_state);
+        .with_state(app_state)
+        .layer(cors);
 
     axum::Server::bind(&"0.0.0.0:8080".parse().unwrap())
         .serve(app.into_make_service())

@@ -10,7 +10,7 @@ use std::sync::{Arc, Mutex};
 
 use crate::{
     json::{JsonResponse, PacketType},
-    AppState,
+    AppState, ReadyState,
 };
 
 use crate::json::{JsonData, PacketTypeStr};
@@ -40,6 +40,7 @@ pub async fn websocket(stream: WebSocket, state: Arc<Mutex<AppState>>) {
                         // TODO: Check if the id is already set or not.
                         state.lock().unwrap().turtle.name = data.name;
                         state.lock().unwrap().turtle.id = data.id;
+                        state.lock().unwrap().ready = ReadyState::Ready;
 
                         let response = JsonResponse {
                             success: true,

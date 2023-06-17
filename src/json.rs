@@ -56,8 +56,8 @@ pub struct FurnaceInformation {
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct FurnaceFuelInformation {
-    pub name: String,
-    pub count: i32,
+    pub name: Option<String>,
+    pub count: Option<i32>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
