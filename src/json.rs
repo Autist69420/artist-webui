@@ -37,27 +37,27 @@ pub struct TurtleConnectionData {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ArtistFurnaceUpdateData {
-    pub furnaces: Vec<Furnace>
+    pub furnaces: Vec<Furnace>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Furnace {
     pub name: String,
     pub cooking: bool,
-    pub info: FurnaceInformation
+    pub info: FurnaceInformation,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct FurnaceInformation {
     pub input: Option<String>,
     pub output: Option<String>,
-    pub fuel: Option<FurnaceFuelInformation>
+    pub fuel: Option<FurnaceFuelInformation>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct FurnaceFuelInformation {
     pub name: String,
-    pub count: i32
+    pub count: i32,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -111,9 +111,7 @@ impl PacketType {
                 let furnaces =
                     to_type::<Vec<Furnace>>(json_value.get("furnaces").unwrap()).unwrap();
 
-                let furnace_data = ArtistFurnaceUpdateData {
-                    furnaces
-                };
+                let furnace_data = ArtistFurnaceUpdateData { furnaces };
 
                 PacketType::ArtistFurnaceUpdate(furnace_data)
             }

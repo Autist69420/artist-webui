@@ -5,10 +5,7 @@ use axum::{
     },
     response::IntoResponse,
 };
-use futures::{
-    stream::StreamExt,
-    SinkExt,
-};
+use futures::{stream::StreamExt, SinkExt};
 use std::sync::{Arc, Mutex};
 
 use crate::{
@@ -58,10 +55,7 @@ pub async fn websocket(stream: WebSocket, state: Arc<Mutex<AppState>>) {
                     let packet_type = PacketType::get_type(json_data.packet, json_data.data);
 
                     if let PacketType::ArtistFurnaceUpdate(data) = packet_type {
-                        tracing::info!(
-                            "furnaces = {:?};",
-                            data.furnaces
-                        );
+                        tracing::info!("furnaces = {:?};", data.furnaces);
 
                         state.lock().unwrap().artist.furnaces = data.furnaces;
 
