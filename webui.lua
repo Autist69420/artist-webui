@@ -37,19 +37,37 @@ local function get_sluts(items, inventories)
 	return all_sluts
 end
 
+local function get_furnace_info(furnace_name)
+	local furnace_peripheral = peripheral.wrap(furnace_name)
+	local contents = furnace_peripheral.list()
+
+	local input, fuel, output
+	if furnace_name:match("^techreborn:electric_furnace") then
+		input, fuel, output = contents[1], { count = 999 }, contents[2]
+	else
+		input, fuel, output = contents[1], contents[2], contents[3]
+	end
+
+	return { input = input, fuel = fuel, output = output }
+end
+
 local function get_furnaces(furnaces)
 	local furni = {}
 
 	for _, furnace in pairs(furnaces.hot_furnaces) do
 		local name = furnace.name
 		local cooking = furnace.cooking
-		table.insert(furni, { cooking = cooking, name = name })
+		local info = get_furnace_info(furnace.name)
+
+		table.insert(furni, { cooking = cooking, name = name, info = info })
 	end
 
 	for _, furnace in pairs(furnaces.cold_furnaces) do
 		local name = furnace.name
 		local cooking = furnace.cooking
-		table.insert(furni, { cooking = cooking, name = name })
+		local info = get_furnace_info(furnace.name)
+
+		table.insert(furni, { cooking = cooking, name = name, info = info })
 	end
 
 	return furni
@@ -97,7 +115,6 @@ return function(context)
 					slots = get_sluts(items, items.inventories),
 				},
 			}
-			--log(json.encode(data))
 			websocket.send(json.encode(data))
 		end
 	end
@@ -116,6 +133,7 @@ return function(context)
 
 				data = { furnaces = gotten_furni },
 			}
+			log(json.encode(data))
 			websocket.send(json.encode(data))
 		end
 	end

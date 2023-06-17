@@ -17,23 +17,14 @@ When artist starts it sends multiple packets: `artist_furnace_update`, `artist_i
 ```json5
 {
 	"packet": "artist_furnace_update",
-	"data": {
-		"hot_furnaces": [
-			{
-				"name": "minecraft:furnace_0",
-				"cooking": true
-			}
-		],
-		"cold_furnaces": [
-			{
-				"name": "minecraft:furnace_1",
-				"cooking": false
-			}
-		]
-	}
+	"data": [
+		{"name": "minecraft:furnace_1", "cooking": true},
+		{"name": "minecraft:furnace_0", "cooking": false}
+	]
 }
 ```
 
 ### Packet `artist_inventory_update`
+There is way too much info to place in this MD, please read the structs
 
 ### Packet `artist_item_change`

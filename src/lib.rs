@@ -24,16 +24,10 @@ pub struct TurtleInformation {
 }
 
 #[derive(Clone, Serialize)]
-pub struct ArtistFurnaceInformation {
-    pub hot_furnaces: Vec<Furnace>,
-    pub cold_furnaces: Vec<Furnace>,
-}
-
-#[derive(Clone, Serialize)]
 pub struct ArtistInventoryInformation {
-    pub used_slots: i32,
-    pub full_slots: i32,
-    pub total_slots: i32,
+    pub used_slots: f32,
+    pub full_slots: f32,
+    pub total_slots: f32,
 
     pub slots: Vec<Item>,
 }
@@ -52,15 +46,6 @@ impl Default for TurtleInformation {
         Self {
             name: String::from("No name"),
             id: -1,
-        }
-    }
-}
-
-impl Default for ArtistFurnaceInformation {
-    fn default() -> Self {
-        Self {
-            hot_furnaces: Vec::new(),
-            cold_furnaces: Vec::new(),
         }
     }
 }

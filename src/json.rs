@@ -44,13 +44,27 @@ pub struct ArtistFurnaceUpdateData {
 pub struct Furnace {
     pub name: String,
     pub cooking: bool,
+    pub info: FurnaceInformation
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct FurnaceInformation {
+    pub input: Option<String>,
+    pub output: Option<String>,
+    pub fuel: Option<FurnaceFuelInformation>
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct FurnaceFuelInformation {
+    pub name: String,
+    pub count: i32
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ArtistInventoryUpdateData {
-    pub used_slots: i32,
-    pub full_slots: i32,
-    pub total_slots: i32,
+    pub used_slots: f32,
+    pub full_slots: f32,
+    pub total_slots: f32,
 
     pub slots: Vec<Item>,
 }
@@ -97,16 +111,16 @@ impl PacketType {
                 let furnaces =
                     to_type::<Vec<Furnace>>(json_value.get("furnaces").unwrap()).unwrap();
 
-                let furnace_data = ArtistFurnaceUpdateData{
+                let furnace_data = ArtistFurnaceUpdateData {
                     furnaces
                 };
 
                 PacketType::ArtistFurnaceUpdate(furnace_data)
             }
             PacketTypeStr::ArtistInventoryUpdate => {
-                let total_slots = to_type::<i32>(json_value.get("total_slots").unwrap()).unwrap();
-                let used_slots = to_type::<i32>(json_value.get("used_slots").unwrap()).unwrap();
-                let full_slots = to_type::<i32>(json_value.get("full_slots").unwrap()).unwrap();
+                let total_slots = to_type::<f32>(json_value.get("total_slots").unwrap()).unwrap();
+                let used_slots = to_type::<f32>(json_value.get("used_slots").unwrap()).unwrap();
+                let full_slots = to_type::<f32>(json_value.get("full_slots").unwrap()).unwrap();
 
                 let slots = to_type::<Vec<Item>>(json_value.get("slots").unwrap()).unwrap();
 
