@@ -26,7 +26,7 @@ pub enum PacketType {
     #[serde(rename = "artist_furnace_update")]
     ArtistFurnaceUpdate(ArtistFurnaceUpdateData),
     #[serde(rename = "artist_inventory_update")]
-    ArtistInventoryUpdate(ArtistInventoryUpdateData)
+    ArtistInventoryUpdate(ArtistInventoryUpdateData),
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -41,10 +41,10 @@ pub struct ArtistFurnaceUpdateData {
     pub hot_furnaces: Vec<Furnace>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Furnace {
     pub name: String,
-    pub cooking: bool
+    pub cooking: bool,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -53,17 +53,17 @@ pub struct ArtistInventoryUpdateData {
     pub full_slots: i32,
     pub total_slots: i32,
 
-    pub slots: Vec<Item>
+    pub slots: Vec<Item>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Item {
     pub hash: String,
     pub sources: HashMap<String, i32>,
     pub count: i64,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ItemDetails {
     pub name: String,
     pub tags: HashMap<String, Value>,
@@ -95,7 +95,8 @@ impl PacketType {
                 PacketType::TurtleConnect(connection_data)
             }
             PacketTypeStr::ArtistFurnaceUpdate => {
-                let hot_furnaces = to_type::<Vec<Furnace>>(json_value.get("hot_furnaces").unwrap()).unwrap();
+                let hot_furnaces =
+                    to_type::<Vec<Furnace>>(json_value.get("hot_furnaces").unwrap()).unwrap();
                 let cold_furnaces =
                     to_type::<Vec<Furnace>>(json_value.get("cold_furnaces").unwrap()).unwrap();
 
@@ -108,10 +109,8 @@ impl PacketType {
             }
             PacketTypeStr::ArtistInventoryUpdate => {
                 let total_slots = to_type::<i32>(json_value.get("total_slots").unwrap()).unwrap();
-                let used_slots =
-                    to_type::<i32>(json_value.get("used_slots").unwrap()).unwrap();
-                let full_slots =
-                    to_type::<i32>(json_value.get("full_slots").unwrap()).unwrap();
+                let used_slots = to_type::<i32>(json_value.get("used_slots").unwrap()).unwrap();
+                let full_slots = to_type::<i32>(json_value.get("full_slots").unwrap()).unwrap();
 
                 let slots = to_type::<Vec<Item>>(json_value.get("slots").unwrap()).unwrap();
 
@@ -123,7 +122,7 @@ impl PacketType {
                 };
 
                 PacketType::ArtistInventoryUpdate(inventory_data)
-            },
+            }
         }
     }
 }
